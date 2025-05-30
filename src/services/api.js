@@ -1,30 +1,26 @@
-const API_BASE_URL = 'https://notes-api.onrender.com/api';
+// Configuração para ambiente local e produção
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+                     'https://dev-web-express-backend.onrender.com';
 
-const customFetch = async (endpoint, options = {}) => {
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-  };
-
+// Função auxiliar para requisições
+async function makeRequest(endpoint, method = 'GET', body = null) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
+    method,
     headers: {
-      ...defaultHeaders,
-      ...options.headers,
+      'Content-Type': 'application/json',
     },
-    mode: 'cors',
-    credentials: 'include',
+    body: body ? JSON.stringify(body) : null,
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    throw new Error(errorData.message || `Erro na requisição: ${response.status}`);
   }
 
   return response.json();
-};
+}
 
-export const getNotes = () => customFetch('/notes');
-export const createNote = (note) => customFetch('/notes', {
-  method: 'POST',
-  body: JSON.stringify(note),
-});
+export const getNotes = () => makeRequest('/api/notes');
+export const createNote = (note) => makeRequest('/api/notes', 'POST', note);
+export const updateNote = (id, note) => makeRequest(`/api/notes/${id}`, 'PUT', note);
+export const deleteNote = (id) => makeRequest(`/api/notes/${id}`, 'DELETE');

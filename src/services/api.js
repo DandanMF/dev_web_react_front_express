@@ -1,30 +1,30 @@
-const API_URL = 'https://notes-api.onrender.com/api';
+const API_BASE_URL = 'https://notes-api.onrender.com/api';
 
-// Função auxiliar para fazer requisições
-async function fetchAPI(endpoint, method = 'GET', body = null) {
-  const options = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include' // Se estiver usando cookies/sessões
+const customFetch = async (endpoint, options = {}) => {
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
   };
 
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+    mode: 'cors',
+    credentials: 'include',
+  });
 
-  const response = await fetch(`${API_URL}${endpoint}`, options);
-  
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Erro na requisição');
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
   }
 
   return response.json();
-}
+};
 
-export const getNotes = async () => fetchAPI('/notes');
-export const createNote = async (note) => fetchAPI('/notes', 'POST', note);
-export const updateNote = async (id, note) => fetchAPI(`/notes/${id}`, 'PUT', note);
-export const deleteNote = async (id) => fetchAPI(`/notes/${id}`, 'DELETE');
+export const getNotes = () => customFetch('/notes');
+export const createNote = (note) => customFetch('/notes', {
+  method: 'POST',
+  body: JSON.stringify(note),
+});
